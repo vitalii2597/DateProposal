@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Will you go on a date with me? 💝</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: Georgia, 'Times New Roman', serif;
+      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #e1bee7 100%);
+    }
+
+    /* ── Floating hearts ── */
+    #hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .heart {
+      position: absolute;
+      bottom: -10%;
+      user-select: none;
+      opacity: 0;
+      animation: rise linear infinite;
+    }
+    @keyframes rise {
+      0%   { opacity: 0;   transform: translateY(0)      scale(0.7) rotate(-8deg); }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.3; }
+      100% { opacity: 0;   transform: translateY(-110vh) scale(1.1) rotate(8deg); }
+    }
+
+    /* ── Screens ── */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      transition: opacity 0.4s ease;
+    }
+    .screen.out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 1.75rem;
+      padding: 2rem 2rem 1.75rem;
+      width: min(400px, calc(100vw - 2rem));
+      text-align: center;
+      box-shadow:
+        0 4px 6px rgba(0,0,0,0.04),
+        0 12px 40px rgba(194, 24, 91, 0.15);
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    .screen.out .card { animation: none; }
+
+    @keyframes popIn {
+      from { transform: scale(0.8) translateY(20px); opacity: 0; }
+      to   { transform: scale(1)   translateY(0);    opacity: 1; }
+    }
+
+    /* ── Typography ── */
+    .hero-emoji {
+      font-size: 3.2rem;
+      line-height: 1;
+      display: block;
+      margin-bottom: 0.6rem;
+      animation: beat 2s ease-in-out infinite;
+    }
+    @keyframes beat {
+      0%, 100% { transform: scale(1);    }
+      30%       { transform: scale(1.15); }
+      60%       { transform: scale(1.07); }
+    }
+
+    h1 {
+      color: #ad1457;
+      line-height: 1.25;
+      margin-bottom: 0.35rem;
+    }
+
+    /* screen-specific h1 sizes */
+    #s1 h1 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); }
+    #s2 h1, #s3 h1 { font-size: 1.45rem; }
+
+    .sub {
+      color: #c2185b;
+      font-style: italic;
+      font-size: 0.88rem;
+      opacity: 0.85;
+      margin-bottom: 1.4rem;
+    }
+
+    /* ── Screen 1 buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 0.9rem;
+      justify-content: center;
+      margin-top: 0.25rem;
+    }
+
+    .btn {
+      padding: 0.7rem 2rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-yes {
+      background: linear-gradient(135deg, #e91e8c, #9c27b0);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(233, 30, 140, 0.35);
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .btn-yes:hover {
+      transform: scale(1.07);
+      box-shadow: 0 6px 22px rgba(233, 30, 140, 0.5);
+    }
+
+    /* No button — lives outside the card as a fixed element */
+    #noBtn {
+      position: fixed;
+      padding: 0.7rem 2rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-family: inherit;
+      font-weight: bold;
+      border: 2px solid #f48fb1;
+      background: #fce4ec;
+      color: #c2185b;
+      cursor: default;
+      pointer-events: none;
+      z-index: 10;
+      display: none; /* shown via JS once position is known */
+    }
+
+    /* ── Screen 2 form ── */
+    .form-group {
+      margin-bottom: 0.9rem;
+      text-align: left;
+    }
+    .form-label {
+      display: block;
+      color: #880e4f;
+      font-size: 0.82rem;
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+      letter-spacing: 0.02em;
+    }
+    input[type="date"] {
+      width: 100%;
+      padding: 0.55rem 0.9rem;
+      border: 2px solid #f48fb1;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: #880e4f;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="date"]:focus { border-color: #e91e8c; }
+
+    .cuisine-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.4rem;
+    }
+    .cBtn {
+      padding: 0.45rem 0.2rem;
+      border: 1.5px solid #f48fb1;
+      border-radius: 8px;
+      background: #fff;
+      color: #880e4f;
+      font-size: 0.78rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cBtn:hover { background: #fce4ec; transform: scale(1.04); }
+    .cBtn.active {
+      background: linear-gradient(135deg, #e91e8c, #9c27b0);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .btn-confirm {
+      width: 100%;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #e91e8c, #9c27b0);
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(233, 30, 140, 0.35);
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .btn-confirm:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 22px rgba(233, 30, 140, 0.5);
+    }
+
+    /* ── Screen 3 ── */
+    .final-box {
+      background: linear-gradient(135deg, #fce4ec, #f3e5f5);
+      border: 1.5px solid #f48fb1;
+      border-radius: 0.9rem;
+      padding: 0.9rem 1rem;
+      margin: 0.9rem 0;
+      font-size: 1rem;
+      color: #880e4f;
+      line-height: 1.8;
+      font-weight: bold;
+    }
+
+
+    /* ── Confetti ── */
+    .confetti-piece {
+      position: fixed;
+      top: -12px;
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 99;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── Shake ── */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-5px); }
+      75%      { transform: translateX(5px); }
+    }
+    .shake { animation: shake 0.35s ease; }
+  </style>
+</head>
+<body>
+
+<div id="hearts"></div>
+
+<!-- No button lives here, outside every card, always fixed -->
+<button id="noBtn">No 😢</button>
+
+<!-- Screen 1: The Question -->
+<div class="screen" id="s1">
+  <div class="card">
+    <span class="hero-emoji">💝</span>
+    <h1>Will you go on a date&nbsp;with&nbsp;me?</h1>
+    <p class="sub">Pretty please? 🥺</p>
+    <div class="btn-row">
+      <button class="btn btn-yes" id="yesBtn">Yes! 💕</button>
+      <div id="noBtnPlaceholder" style="padding:0.7rem 2rem;visibility:hidden;font-size:1rem;">No 😢</div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen 2: Date Planning -->
+<div class="screen out" id="s2">
+  <div class="card">
+    <span class="hero-emoji">🎉</span>
+    <h1>Yay! I'm so happy! 😍</h1>
+    <p class="sub">Let's plan our perfect date ✨</p>
+
+    <div class="form-group">
+      <label class="form-label" for="dp">📅 Pick a date</label>
+      <input type="date" id="dp">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🍽️ Pick a cuisine</label>
+      <div class="cuisine-grid" id="cuisineGrid">
+        <button class="cBtn" data-c="Italian 🍝">🍝 Italian</button>
+        <button class="cBtn" data-c="Japanese 🍣">🍣 Japanese</button>
+        <button class="cBtn" data-c="Mexican 🌮">🌮 Mexican</button>
+        <button class="cBtn" data-c="French 🥐">🥐 French</button>
+        <button class="cBtn" data-c="Indian 🍛">🍛 Indian</button>
+        <button class="cBtn" data-c="American 🍔">🍔 American</button>
+        <button class="cBtn" data-c="Thai 🍜">🍜 Thai</button>
+        <button class="cBtn" data-c="Surprise! 🎲">🎲 Surprise</button>
+      </div>
+    </div>
+
+    <button class="btn-confirm" id="confirmBtn">It's a date! ❤️</button>
+  </div>
+</div>
+
+<!-- Screen 3: Final -->
+<div class="screen out" id="s3">
+  <div class="card">
+    <span class="hero-emoji">❤️</span>
+    <h1>It's a date!</h1>
+    <p class="sub">I cannot wait to see you 😍</p>
+    <div class="final-box" id="finalBox"></div>
+    <p class="sub" style="margin-top:0.5rem;margin-bottom:0">This is going to be the best day ever 💫</p>
+    <p id="notifyStatus" style="margin-top:0.6rem;font-size:0.8rem;color:#ad1457;opacity:0.8;font-style:italic;"></p>
+  </div>
+</div>
+
+<script>
+  /* ── Floating hearts ── */
+  const heartsEl = document.getElementById('hearts');
+  const glyphs = ['❤️','💕','💗','💝','💖','💓','🌸','✨','💞','🫶'];
+  function spawnHeart() {
+    const el = document.createElement('span');
+    el.className = 'heart';
+    el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+    el.style.left = Math.random() * 96 + 'vw';
+    el.style.fontSize = (Math.random() * 1.2 + 0.7) + 'rem';
+    const dur = Math.random() * 5 + 6;
+    el.style.animationDuration = dur + 's';
+    el.style.animationDelay = Math.random() * 1.5 + 's';
+    heartsEl.appendChild(el);
+    setTimeout(() => el.remove(), (dur + 2) * 1000);
+  }
+  setInterval(spawnHeart, 700);
+  for (let i = 0; i < 5; i++) spawnHeart();
+
+  /* ── No button physics ── */
+  const noBtn   = document.getElementById('noBtn');
+  const placeholder = document.getElementById('noBtnPlaceholder');
+
+  let bx = 0, by = 0;
+  let vx = 0, vy = 0;
+  let mouseX = -999, mouseY = -999;
+  let ready = false;
+
+  const RADIUS   = 130;
+  const FORCE    = 22;
+  const DAMPING  = 0.75;
+  const MAX_SPD  = 30;
+  const PAD      = 14;
+
+  // Position the No button exactly over its placeholder, then show it
+  function initNoBtn() {
+    const r = placeholder.getBoundingClientRect();
+    bx = r.left;
+    by = r.top;
+    noBtn.style.left = bx + 'px';
+    noBtn.style.top  = by + 'px';
+    noBtn.style.display = 'block';
+    ready = true;
+  }
+
+  function physicsLoop() {
+    requestAnimationFrame(physicsLoop);
+    if (!ready || document.getElementById('s1').classList.contains('out')) return;
+
+    const w = noBtn.offsetWidth  || 100;
+    const h = noBtn.offsetHeight || 40;
+
+    const cx = bx + w / 2;
+    const cy = by + h / 2;
+    const dx = cx - mouseX;
+    const dy = cy - mouseY;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist < RADIUS && dist > 0.5) {
+      const strength = (1 - dist / RADIUS) * FORCE;
+      vx += (dx / dist) * strength;
+      vy += (dy / dist) * strength;
+    }
+
+    vx *= DAMPING;
+    vy *= DAMPING;
+
+    const spd = Math.hypot(vx, vy);
+    if (spd > MAX_SPD) { vx = vx / spd * MAX_SPD; vy = vy / spd * MAX_SPD; }
+
+    bx += vx;
+    by += vy;
+
+    const maxX = window.innerWidth  - w - PAD;
+    const maxY = window.innerHeight - h - PAD;
+
+    if (bx < PAD)  { bx = PAD;  vx *= -0.5; }
+    if (bx > maxX) { bx = maxX; vx *= -0.5; }
+    if (by < PAD)  { by = PAD;  vy *= -0.5; }
+    if (by > maxY) { by = maxY; vy *= -0.5; }
+
+    noBtn.style.left = bx + 'px';
+    noBtn.style.top  = by + 'px';
+  }
+
+  document.addEventListener('mousemove', e => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  // Wait for layout to settle, then pin the No button
+  window.addEventListener('load', () => {
+    requestAnimationFrame(() => requestAnimationFrame(initNoBtn));
+    physicsLoop();
+  });
+
+  /* ── Screen transitions ── */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('out'));
+    requestAnimationFrame(() => document.getElementById(id).classList.remove('out'));
+  }
+
+  /* ── Yes button ── */
+  document.getElementById('yesBtn').addEventListener('click', () => {
+    showScreen('s2');
+    const today = new Date();
+    const maxDate = new Date(today);
+    maxDate.setFullYear(maxDate.getFullYear() + 1);
+    const toISO = d => d.toISOString().split('T')[0];
+    document.getElementById('dp').min = toISO(today);
+    document.getElementById('dp').max = toISO(maxDate);
+  });
+
+  /* ── Cuisine selection ── */
+  let cuisine = '';
+  document.getElementById('cuisineGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.cBtn');
+    if (!btn) return;
+    document.querySelectorAll('.cBtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    cuisine = btn.dataset.c;
+  });
+
+
+  /* ── Confirm ── */
+  document.getElementById('confirmBtn').addEventListener('click', async () => {
+    const dv = document.getElementById('dp').value;
+    if (!dv)      { shake(document.getElementById('dp'));          return; }
+    if (!cuisine) { shake(document.getElementById('cuisineGrid')); return; }
+
+    const d = new Date(dv + 'T12:00:00');
+    const label = d.toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    const fb = document.getElementById('finalBox');
+    fb.textContent = '';
+    const dl = document.createElement('div'); dl.textContent = `📅 ${label}`;
+    const cl = document.createElement('div'); cl.textContent = `🍽️ ${cuisine}`;
+    fb.appendChild(dl);
+    fb.appendChild(cl);
+
+    showScreen('s3');
+    confetti();
+
+    // Silently notify — person sees nothing, no credentials in this file
+    const status = document.getElementById('notifyStatus');
+    try {
+      const res = await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: label, cuisine }),
+      });
+      status.textContent = res.ok ? '✉️ Vitalii has been notified!' : '';
+    } catch {
+      status.textContent = '';
+    }
+  });
+
+  function shake(el) {
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+    el.addEventListener('animationend', () => el.classList.remove('shake'), { once: true });
+  }
+
+  /* ── Confetti ── */
+  function confetti() {
+    const colors = ['#e91e8c','#9c27b0','#f48fb1','#ff80ab','#ce93d8','#c2185b','#fff176'];
+    for (let i = 0; i < 80; i++) {
+      setTimeout(() => {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left   = Math.random() * 100 + 'vw';
+        p.style.width  = (Math.random() * 8 + 5) + 'px';
+        p.style.height = (Math.random() * 8 + 5) + 'px';
+        p.style.background   = colors[Math.floor(Math.random() * colors.length)];
+        p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        const dur = Math.random() * 2 + 2;
+        p.style.animationDuration = dur + 's';
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), dur * 1000 + 300);
+      }, i * 20);
+    }
+  }
+</script>
+</body>
+</html>
