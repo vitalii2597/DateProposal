@@ -4,19 +4,6 @@ module.exports = async function handler(req, res) {
     return res.status(405).end('Method Not Allowed');
   }
 
-  // CORS — only accept requests from the configured origin
-  const allowedOrigin = process.env.ALLOWED_ORIGIN;
-  const origin = req.headers.origin || '';
-  if (allowedOrigin && origin !== allowedOrigin) {
-    return res.status(403).end('Forbidden');
-  }
-
-  // Secret token — lightweight abuse prevention
-  const expectedToken = process.env.NOTIFY_SECRET;
-  const sentToken = req.headers['x-notify-secret'];
-  if (expectedToken && sentToken !== expectedToken) {
-    return res.status(401).end('Unauthorized');
-  }
 
   const { date, cuisine } = req.body || {};
   if (!date || !cuisine) {
